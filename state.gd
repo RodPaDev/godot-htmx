@@ -1,9 +1,9 @@
 extends Node
 
-var _count = 0
+var count = 0 : get = get_count
 
 func increment_count():
-	_count += 1
+	count += 1
 
 func get_count():
-	return _count
+	return count

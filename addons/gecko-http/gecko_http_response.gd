@@ -1,13 +1,13 @@
 # A response object useful to send out responses
 extends RefCounted
-class_name HttpResponse
+class_name GeckoHttpResponse
 
 
 # The client currently talking to the server
 var client: StreamPeer
 
 # The server identifier to use on responses [GodotTPD]
-var server_identifier: String = "GodotTPD"
+var server_identifier: String = "Gecko"
 
 # A dictionary of headers
 # Headers can be set using the `set(name, value)` function
@@ -26,6 +26,32 @@ var access_control_allowed_methods = "POST, GET, OPTIONS"
 
 # Comma separed headers for the access control
 var access_control_allowed_headers = "content-type"
+
+func _init(client: StreamPeer, request: GeckoHttpRequest, allowed_origins: PackedStringArray, _access_control_allowed_methods: String, _access_control_allowed_headers: String):
+	self.client = client
+	var found = false
+	var is_allowed_origin = false
+	var fetch_mode = ""
+	var origin = ""
+
+
+	if request.headers.has("Sec-Fetch-Mode"):
+		fetch_mode = request.headers["Sec-Fetch-Mode"]
+	elif request.headers.has("sec-fetch-mode"):
+		fetch_mode = request.headers["sec-fetch-mode"]
+
+	if request.headers.has("Origin"):
+		origin = request.headers["Origin"]
+	elif request.headers.has("origin"):
+		origin = request.headers["origin"]
+
+	if allowed_origins.has(origin):
+		is_allowed_origin = true
+		self.access_control_origin = origin
+
+	self.access_control_allowed_methods = _access_control_allowed_methods
+	self.access_control_allowed_headers = _access_control_allowed_headers
+
 
 # Send out a raw (Bytes) response to the client
 # Useful to send files faster or raw data which will be converted by the client
@@ -73,7 +99,7 @@ func json(status_code: int, data) -> void:
 # #### Parameters
 # - field: the name of the header i.e. "Accept-Type"
 # - value: the value of this header i.e. "application/json"
-func set(field: StringName, value: Variant) -> void:
+func set_header(field: StringName, value: Variant) -> void:
 	headers[field] = value
 
 
